@@ -1,3 +1,4 @@
+package src.com.aplikasi.pos;
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
@@ -5,19 +6,24 @@ import java.awt.event.*;
 import java.awt.print.*;
 
 public class POSSystem extends JFrame {
-    private JTable productTable, cartTable;
-    private DefaultTableModel productModel, cartModel;
-    private JLabel detailLabel, totalLabel, pointsLabel;
-    private JTextField qtyField;
-    private JButton addToCartBtn, checkoutBtn, printBtn;
+    private JTable productTable;
+    private DefaultTableModel productModel;
+    private DefaultTableModel cartModel;
+    private JLabel detailLabel; 
+    private JLabel totalLabel; 
+    private JLabel pointsLabel;
+    private JTextField qtyField;  
     private JTextArea receiptArea;
     private double totalAmount = 0;
     private int points = 0;
+    private static final String DEFAULT_TOTAL_TEXT = "Total: Rp0.00";
+    private static final String DEFAULT_POINTS = "Points: 0";
+    private static final String BORDERS = "================================\n";
     
     public POSSystem() {
         setTitle("POIN Off-Sales - Java Swing");
         setSize(900, 550);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         
         // Menu Bar
@@ -49,6 +55,7 @@ public class POSSystem extends JFrame {
     }
     
     private JPanel createProductPanel() {
+        JButton addToCartBtn;
         JPanel panel = new JPanel(new BorderLayout(5, 5));
         panel.setBorder(BorderFactory.createTitledBorder("Produk"));
         
@@ -99,12 +106,8 @@ public class POSSystem extends JFrame {
         qtyPanel.add(qtyField);
         
         addToCartBtn = new JButton("Add to Cart");
-        addToCartBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                addToCart();
-            }
-        });
+        addToCartBtn.addActionListener(e -> addToCart());       
+
         qtyPanel.add(addToCartBtn);
         
         bottomPanel.add(qtyPanel, BorderLayout.CENTER);
@@ -114,6 +117,9 @@ public class POSSystem extends JFrame {
     }
     
     private JPanel createCartPanel() {
+        JButton printBtn;
+        JButton checkoutBtn;
+        JTable cartTable;
         JPanel panel = new JPanel(new BorderLayout(5, 5));
         panel.setBorder(BorderFactory.createTitledBorder("Keranjang"));
         
@@ -145,30 +151,20 @@ public class POSSystem extends JFrame {
         JPanel totalPanel = new JPanel(new GridLayout(3, 1, 5, 5));
         totalPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 5, 10));
         
-        totalLabel = new JLabel("Total: Rp0.00");
+        totalLabel = new JLabel(DEFAULT_TOTAL_TEXT);
         totalLabel.setFont(new Font("Arial", Font.BOLD, 14));
         totalPanel.add(totalLabel);
         
-        pointsLabel = new JLabel("Points: 0");
+        pointsLabel = new JLabel(DEFAULT_POINTS);
         totalPanel.add(pointsLabel);
         
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         checkoutBtn = new JButton("Checkout");
-        checkoutBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                checkout();
-            }
-        });
+        checkoutBtn.addActionListener(_ -> checkout());
         buttonPanel.add(checkoutBtn);
         
         printBtn = new JButton("Cetak");
-        printBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                printReceipt();
-            }
-        });
+        printBtn.addActionListener(_ -> printReceipt());
         buttonPanel.add(printBtn);
         
         totalPanel.add(buttonPanel);
@@ -244,7 +240,7 @@ public class POSSystem extends JFrame {
             calculateTotal();
             qtyField.setText("1");
             
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             JOptionPane.showMessageDialog(this, "Quantity harus berupa angka!");
         }
     }
@@ -277,16 +273,16 @@ public class POSSystem extends JFrame {
         cartModel.setRowCount(0);
         totalAmount = 0;
         points = 0;
-        totalLabel.setText("Total: Rp0.00");
-        pointsLabel.setText("Points: 0");
+        totalLabel.setText(DEFAULT_TOTAL_TEXT);
+        pointsLabel.setText(DEFAULT_POINTS);
         qtyField.setText("1");
     }
     
     private void generateReceipt() {
         StringBuilder receipt = new StringBuilder();
-        receipt.append("================================\n");
+        receipt.append(BORDERS);
         receipt.append("     POIN Off-Sales\n");
-        receipt.append("================================\n\n");
+        receipt.append(BORDERS + "\n");
         
         for (int i = 0; i < cartModel.getRowCount(); i++) {
             String name = cartModel.getValueAt(i, 1).toString();
@@ -302,9 +298,9 @@ public class POSSystem extends JFrame {
         receipt.append("\n--------------------------------\n");
         receipt.append("Total: Rp").append(formatCurrency(totalAmount)).append("\n");
         receipt.append("Points: ").append(points).append("\n");
-        receipt.append("================================\n");
+        receipt.append(BORDERS);
         receipt.append("   Terima Kasih!\n");
-        receipt.append("================================\n");
+        receipt.append(BORDERS + "\n");
         
         receiptArea.setText(receipt.toString());
     }
@@ -316,29 +312,22 @@ public class POSSystem extends JFrame {
         }
         
         PrinterJob job = PrinterJob.getPrinterJob();
-        job.setPrintable(new Printable() {
-            @Override
-            public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) {
-                if (pageIndex > 0) {
-                    return NO_SUCH_PAGE;
-                }
-                
-                Graphics2D g2d = (Graphics2D) graphics;
-                g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
-                
-                // Set font
-                g2d.setFont(new Font("Monospaced", Font.PLAIN, 10));
-                
-                // Print receipt text
-                String[] lines = receiptArea.getText().split("\n");
-                int y = 50;
-                for (String line : lines) {
-                    g2d.drawString(line, 50, y);
-                    y += 15;
-                }
-                
-                return PAGE_EXISTS;
+        job.setPrintable((graphics, pageFormat, pageIndex) -> {
+            if (pageIndex > 0) {
+                return Printable.NO_SUCH_PAGE; // Menggunakan konstanta interface
             }
+
+            Graphics2D g2d = (Graphics2D) graphics;
+            g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+            g2d.setFont(new Font("Monospaced", Font.PLAIN, 10));
+
+            String[] lines = receiptArea.getText().split("\n");
+            int y = 50;
+            for (String line : lines) {
+                g2d.drawString(line, 50, y);
+                y += 15;
+            }
+            return Printable.PAGE_EXISTS; // Menggunakan konstanta interface
         });
         
         boolean doPrint = job.printDialog();
@@ -359,22 +348,6 @@ public class POSSystem extends JFrame {
         }
     }
     
-    private void resetTransaction() {
-        // Clear cart table
-        cartModel.setRowCount(0);
-        
-        // Clear receipt area
-        receiptArea.setText("");
-        
-        // Reset total and points
-        totalAmount = 0;
-        points = 0;
-        totalLabel.setText("Total: Rp0.00");
-        pointsLabel.setText("Points: 0");
-        
-        // Reset quantity field
-        qtyField.setText("1");
-    }
     
     private String formatCurrency(double amount) {
         return String.format("%,.2f", amount);
@@ -387,11 +360,6 @@ public class POSSystem extends JFrame {
             e.printStackTrace();
         }
         
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new POSSystem();
-            }
-        });
+        SwingUtilities.invokeLater(POSSystem::new);
     }
 }

@@ -1,0 +1,13 @@
+com\codeway\daoTemplate\utils\TemplateDataSource.class
+com\codeway\daoTemplate\sample\MyDataSource.class
+com\codeway\daoTemplate\sample\User.class
+com\codeway\daoTemplate\sample\UserDaoImpl.class
+com\codeway\daoTemplate\utils\TemplateLogger.class
+com\codeway\daoTemplate\dao\IGenericDao.class
+com\codeway\daoTemplate\utils\TemplateConfiguration.class
+javax\persistence\Table.class
+javax\persistence\Column.class
+com\codeway\daoTemplate\dao\GenericDaoImpl.class
+com\codeway\daoTemplate\sample\PooledDataSource.class
+javax\persistence\Transient.class
+javax\persistence\Id.class
